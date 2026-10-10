@@ -55,7 +55,7 @@ El frontend DEBE implementarse con Blazor Web App y Razor Components.
 ### IV. Stack Tecnológico Obligatorio
 El stack no es negociable y DEBE aplicarse sin excepción:
 
-- SDK: .NET 11.
+- SDK: .NET 10.
 - Frontend: Blazor Web App con Razor Components.
 - Backend: ASP.NET Core Minimal APIs.
 - Persistencia: EF Core + Npgsql + PostgreSQL.
@@ -192,6 +192,38 @@ Al terminar todas las preguntas, el agente DEBE mostrar un resumen de las decisi
 
 ---
 
+## Ciclo de estado de specs
+
+Cada iniciativa en `specs/` DEBE registrar un estado canónico y solo puede transitar en el siguiente ciclo:
+
+- Borrador: se asigna al crear la spec.
+- Aprobada: se asigna al aprobar la revisión de la spec.
+- En implementación: se asigna al iniciar la ejecución de la implementación.
+- Implementada: se asigna al finalizar la implementación solo cuando la validación se ha cumplido.
+
+### Transiciones permitidas
+
+La secuencia de transición obligatoria es la siguiente:
+
+- Borrador -> Aprobada
+- Aprobada -> En implementación
+- En implementación -> Implementada
+
+No se permiten otras transiciones. Si una spec intenta cerrarse con un estado no canónico o fuera de esta secuencia, el agente DEBE detenerse y reportar el bloqueo con causa explícita.
+
+### Reglas de cierre y bloqueo
+
+1. La implementación DEBE iniciar con el estado En implementación antes de comenzar la ejecución de tareas.
+2. La spec solo puede marcarse como Implementada si:
+   - no existe ninguna tarea sin completar en `tasks.md`;
+   - existe evidencia de validación en `quickstart.md`.
+3. Si alguna de estas condiciones falla, el estado DEBE mantenerse en En implementación y el agente DEBE reportar un bloqueo con causa explícita, indicando el criterio que impidió el cierre.
+4. Cada cambio de estado DEBE quedar trazado en el artefacto correspondiente para que el flujo tenga evidencia clara de por qué cambió o no cambió el estado.
+
+La trazabilidad del estado es parte de la gobernanza operativa del proyecto y no se considera un ajuste manual opcional.
+
+---
+
 ## Gobierno
 
 Esta constitución es el documento rector del proyecto y tiene precedencia sobre cualquier otra práctica, convención o preferencia personal.
@@ -228,4 +260,4 @@ Está prohibido al agente mover archivos por iniciativa propia, renombrar carpet
 
 La única resolución legítima es la decisión humana documentada vía enmienda constitucional o ajuste explícito de convención local.
 
-**Versión**: 1.0.0 | **Ratificada**: TODO(RATIFICATION_DATE): confirmar fecha de adopción | **Última enmienda**: 2026-10-10
+**Versión**: 1.1.0 | **Ratificada**: TODO(RATIFICATION_DATE): confirmar fecha de adopción | **Última enmienda**: 2026-10-10

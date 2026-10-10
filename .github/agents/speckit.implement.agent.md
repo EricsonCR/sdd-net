@@ -45,6 +45,22 @@ You **MUST** consider the user input before proceeding (if not empty).
     After emitting the block above you MUST actually invoke the hook and wait for it to finish before continuing. Run it the same way you would run the command yourself in this agent/session (the invocation may differ from the literal `{command}` id shown above, e.g. a skills-mode agent runs it as `/skill:speckit-...` or `$speckit-...`). Emitting the block alone does not run the hook.
 - If no hooks are registered or `.specify/extensions.yml` does not exist, skip silently
 
+## Estado de la spec y validación del flujo
+
+Antes de ejecutar tareas de implementación, el agente DEBE confirmar el estado canónico de la spec y aplicarlo automáticamente al flujo de trabajo.
+
+1. Leer `spec.md` del feature activo y localizar su campo de estado (`Estado` o `Status`).
+2. Si el estado actual es `Borrador`, la spec no puede ejecutar implementación y DEBE bloquearse con causa explícita: "La spec no está aprobada para implementación.".
+3. Si el estado actual es `Aprobada`, cambiarlo automáticamente a `En implementación` antes de iniciar la ejecución de tareas.
+4. Si el estado actual ya es `En implementación`, mantenerlo y continuar con la implementación.
+5. Si el estado actual es `Implementada`, detener la ejecución y reportar bloqueo: "La spec ya ha sido implementada y no puede volver a abrirse en este flujo."
+6. Al finalizar la implementación, evaluar dos condiciones obligatorias:
+   - ninguna tarea pendiente en `tasks.md`;
+   - evidencia de validación en `quickstart.md`.
+7. Si ambas condiciones se cumplen, cambiar el estado a `Implementada` y dejar la trazabilidad de cierre en el registro de la spec.
+8. Si alguna condición no se cumple, mantener el estado en `En implementación` y reportar bloqueo con causa explícita, indicando la razón técnica exacta.
+9. Si el proyecto usa hooks en `.specify/extensions.yml`, respetar la secuencia `before_implement` y `after_implement` para automatizar la transición de estado antes y después de la implementación, sin saltarse la validación de cierre.
+
 ## Outline
 
 1. Run `.specify/scripts/powershell/check-prerequisites.ps1 -Json -RequireTasks -IncludeTasks` from repo root and parse FEATURE_DIR and AVAILABLE_DOCS list. All paths must be absolute. For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
