@@ -46,11 +46,13 @@ Las specs aprobadas ubicadas en `specs/` son la única fuente de verdad del proy
 
 Está prohibido implementar funcionalidad que no esté descrita en el `spec.md` vigente.
 
-Cada iniciativa DEBE contener exactamente tres archivos:
+Cada iniciativa DEBE contener los tres artefactos canónicos:
 
 - `spec.md`
 - `plan.md`
 - `tasks.md`
+
+Como salidas auxiliares exclusivas de `speckit.plan`, también se permiten `research.md`, `data-model.md`, `quickstart.md` y contratos dentro de `contracts/`. Cada salida auxiliar DEBE referenciarse desde `plan.md`, no reemplaza un artefacto canónico y no requiere una tarea individual en `tasks.md`.
 
 El flujo obligatorio mínimo es:
 
@@ -92,9 +94,9 @@ Está prohibido crear archivos vacíos o simulados para saltar fases.
 
 ## Trazabilidad obligatoria
 
-Todo código, archivo, template, migración, seeder, componente, endpoint o cambio de configuración DEBE estar trazado a una tarea específica en `tasks.md`.
+Todo código y archivo de implementación, incluidos templates, migraciones, seeders, componentes, endpoints y cambios de configuración, DEBE estar trazado a una tarea específica en `tasks.md`. Las únicas excepciones son las salidas auxiliares de `speckit.plan` enumeradas arriba, que deben quedar referenciadas desde `plan.md`.
 
-Si un cambio no tiene tarea asociada en `tasks.md`, debe rechazarse.
+Si un cambio de implementación no tiene tarea asociada en `tasks.md`, debe rechazarse.
 
 Cada tarea completada DEBE marcarse como `[X]`.
 
@@ -183,7 +185,8 @@ Está prohibido:
 
 - Implementar funcionalidades no descritas en `spec.md`.
 - Saltar fases del flujo spec-driven.
-- Crear archivos no trazados a `tasks.md`.
+- Crear archivos distintos de los tres artefactos canónicos y las salidas auxiliares permitidas de `speckit.plan`.
+- Crear archivos de implementación no trazados a `tasks.md`.
 - Cambiar arquitectura sin actualizar `plan.md`.
 - Modificar scripts upstream de spec-kit sin decisión humana explícita.
 - Mover specs a rutas no canónicas.

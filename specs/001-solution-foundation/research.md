@@ -1,50 +1,28 @@
 # Investigación de la fundación de la solución
 
-## Decisiones tomadas
+## Decisiones
 
 ### 1. Base tecnológica del repositorio
-- Se mantiene el SDK fijo en `global.json` con `10.0.401` y no se modifica.
-- La solución será un único proyecto de solución dotnet que incluye backend, frontend y dos suites de pruebas.
+- **Decisión**: Usar .NET 10 con el SDK `10.0.401` fijado en `global.json` en la raíz; no modificar ese archivo.
+- **Racional**: La constitución y la spec 001 establecen .NET 10 y los proyectos existentes apuntan a `net10.0`.
+- **Alternativas consideradas**: .NET 11 aparece en las instrucciones locales de backend, pero contradice la constitución; se descarta para esta iniciativa porque la constitución prevalece.
 
 ### 2. Organización de la solución
-- El punto de entrada de la solución será `app/Realtor.sln`.
-- El backend viviría en `app/backend/src/RealtorApi/` y se implementará como ASP.NET Core Minimal APIs sin `Controller`.
-- El frontend vivirá en `app/frontend/src/RealtorWeb/` como Blazor Web App con Razor Components.
-- Las pruebas seguirán la estructura sugerida por la constitución: una suite de backend y otra de frontend para pruebas unitarias.
+- **Decisión**: Conservar `app/Realtor.sln` y los cuatro proyectos existentes en las rutas definidas por la spec. El backend usa Minimal APIs y el frontend Blazor Web App con Razor Components.
+- **Racional**: Las rutas son el contrato aprobado de la iniciativa y mantienen una única solución compartida sin controllers.
+- **Alternativas consideradas**: Crear otra solución, mover proyectos o usar controllers; se descartan porque contradicen la spec o la constitución.
 
-### 3. Respuesta de salud
-- El primer endpoint público será `GET /health`.
-- La respuesta debe ser un JSON simple con estado saludable y marca temporal, sin depender de servicios externos ni de persistencia.
+### 3. Contrato de salud y verificación
+- **Decisión**: Mantener `GET /health` con HTTP 200 y JSON que incluya `status`, `service` y `timestamp`, conforme a `contracts/health-endpoint.md`.
+- **Racional**: La sonda comprueba el arranque de la API sin depender de lógica de producto, persistencia ni servicios externos.
+- **Alternativas consideradas**: Consultar bases de datos u otros servicios desde la sonda; se descarta porque excede el alcance y haría que la disponibilidad básica dependiera de infraestructura externa.
 
 ### 4. Estrategia de pruebas
-- Para el backend se usará `xUnit` con `FluentAssertions`.
-- Para el frontend se usará `xUnit` con `bUnit` para validar componentes base sin introducir lógica de negocio.
-- La iniciativa no incorpora tests de integración ni persistencia porque aún no existe dominio ni infraestructura de producto.
+- **Decisión**: Usar xUnit en los dos proyectos de pruebas. Mantener las pruebas unitarias y permitir únicamente una prueba HTTP en proceso con `WebApplicationFactory` para `GET /health`.
+- **Racional**: La prueba de host verifica el contrato HTTP y el arranque real de la ruta solicitada. Los proyectos existentes usan xUnit; el backend ya referencia `Microsoft.AspNetCore.Mvc.Testing`.
+- **Límite constitucional**: La excepción no habilita otras pruebas de integración. Conforme a la constitución, solo puede usarse cuando la spec esté Aprobada y la justificación esté explícita también en plan y tareas; T017 debe nombrar expresamente la prueba antes de habilitar una nueva implementación.
+- **Alternativas consideradas**: Usar únicamente pruebas unitarias no verificaría la ruta a través del host. Usar `WebApplicationFactory` para toda la suite excedería la excepción mínima necesaria. No se agregan FluentAssertions ni bUnit porque no están en los proyectos existentes ni son requeridos por la spec.
 
-## Racional
+## Síntesis
 
-La decisión principal es crear una solución base que compile sin introducir funcionalidad de negocio. Esto encaja con la constitución del repositorio, que exige un único sistema compartido, stack .NET 10, frontend Blazor y backend Minimal API, y un único punto de entrada para continuar desarrollando las siguientes specs.
-
-La ruta de `app/` es necesaria porque la especificación define explícitamente los proyectos y el nombre de la solución. La decisión de excluir lógica de dominio y entidades desde esta iniciativa es consistente con la restricción de no crear funciones del producto antes de la primera implementación funcional real.
-
-## Alternativas consideradas
-
-### Opción A: Crear una sola solución sin división por app/
-- Ventaja: simplifica la estructura inicial.
-- Desventaja: contraviene la especificación y la organización requerida por la iniciativa.
-- Resultado: descartada.
-
-### Opción B: Usar ASP.NET Core MVC o controllers en el backend
-- Ventaja: familiar para algunos equipos.
-- Desventaja: la constitución prohíbe controllers y exige Minimal APIs.
-- Resultado: descartada.
-
-### Opción C: Incluir lógica de dominio o entidades en esta iniciativa
-- Ventaja: podría parecer un avance funcional inmediato.
-- Desventaja: viola los requisitos de la especificación y la regla de no implementar negocio en la fundación.
-- Resultado: descartada.
-
-### Opción D: Configurar PostgreSQL u otros servicios en la primera fase
-- Ventaja: prepara infraestructura más adelante.
-- Desventaja: excede el alcance y no es necesario para un endpoint de salud local.
-- Resultado: descartada en esta iniciativa.
+La solución mantiene las rutas, plataformas y límites ya aprobados, y no introduce dependencias de producto. La prueba de host de `/health` queda acotada y condicionada a las transiciones y la trazabilidad exigidas por la constitución.

@@ -5,6 +5,12 @@
 **Estado**: Borrador  
 **Entrada**: Crear la estructura inicial de la solución Realtor, sin lógica de negocio ni funcionalidades de producto.
 
+## Clarificaciones
+
+### Session 2026-10-12
+
+- Q: ¿Se autoriza una prueba automatizada de integración con `WebApplicationFactory` exclusivamente para comprobar `GET /health`? → A: Sí; se permite una prueba con `WebApplicationFactory` solo para `/health`.
+
 ## Escenarios de usuario y pruebas
 
 ### Historia 1: Preparar una solución compilable (Prioridad: P1)
@@ -26,7 +32,7 @@ Como persona desarrolladora, quiero consultar un endpoint de salud básico para 
 
 **Prioridad**: Permite comprobar el arranque del backend antes de añadir casos de uso.
 
-**Prueba independiente**: Iniciar la API y solicitar `GET /health`; la respuesta debe indicar un estado saludable y usar un código HTTP de éxito.
+**Prueba independiente**: Una prueba con `WebApplicationFactory` inicia el host HTTP en memoria y solicita `GET /health`; la respuesta debe indicar un estado saludable y usar un código HTTP de éxito.
 
 **Escenarios de aceptación**:
 
@@ -67,7 +73,7 @@ Como persona desarrolladora, quiero consultar un endpoint de salud básico para 
 
 - El entorno de desarrollo tendrá instalado el SDK seleccionado por `global.json`, actualmente `10.0.401`.
 - El framework objetivo para los proyectos será .NET 10 (`net10.0`).
-- Los proyectos de pruebas se preparan para pruebas unitarias, conforme a la constitución; la selección de framework de pruebas se resolverá en el plan.
+- Los proyectos de pruebas se preparan para pruebas unitarias. Se autoriza una única prueba con `WebApplicationFactory` para `GET /health`, como excepción explícita para verificar el endpoint HTTP; la selección del framework se resolverá en el plan.
 - La respuesta de `GET /health` será local y básica, sin comprobar dependencias externas ni persistencia.
 - Los nombres y rutas indicados son el contrato de esta iniciativa; la organización interna detallada se definirá en el plan.
 

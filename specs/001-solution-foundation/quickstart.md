@@ -21,6 +21,20 @@ dotnet build app/Realtor.sln
 - `dotnet build app/Realtor.sln` termina con éxito.
 - Los cuatro proyectos de la solución se compilan sin errores.
 
+## Validación automatizada del backend
+
+Desde la raíz del repositorio, ejecuta las pruebas del backend:
+
+```bash
+dotnet test app/backend/tests/RealtorApiTests/RealtorApiTests.csproj
+```
+
+### Resultado esperado
+
+- La suite de xUnit termina sin pruebas fallidas.
+- La prueba con `WebApplicationFactory` verifica exclusivamente el contrato HTTP de `GET /health` en el host de pruebas.
+- La excepción no habilita pruebas de integración para otras rutas o dependencias.
+
 ## Validación del endpoint de salud
 
 1. Inicia la API desde la raíz del repositorio:

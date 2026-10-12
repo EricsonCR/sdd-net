@@ -19,6 +19,14 @@ Informe de impacto de sincronización
 - TODO: confirmar la fecha original de ratificación; no consta en el repositorio.
 -->
 
+<!--
+Informe de enmienda 1.1.0 - 2026-10-12
+- Tipo: MINOR; se mantienen tres artefactos canónicos y se autorizan salidas auxiliares limitadas de speckit.plan.
+- Secciones modificadas: Estructura del Repositorio; Método de Trabajo.
+- Trazabilidad: las salidas auxiliares se referencian desde plan.md y no requieren tareas individuales; el código y los archivos de implementación conservan la trazabilidad obligatoria a tasks.md.
+- Sincronización: .github/copilot-instructions.md.
+-->
+
 # Constitución del Proyecto Realtor
 
 ## Principios Fundamentales
@@ -99,6 +107,8 @@ Las specs viven en la raíz del repositorio:
 - specs/NNN-nombre/plan.md
 - specs/NNN-nombre/tasks.md
 
+Estos son los tres artefactos canónicos de cada iniciativa. Como salidas auxiliares exclusivas de `speckit.plan`, se permiten además `research.md`, `data-model.md`, `quickstart.md` y los contratos ubicados en `contracts/`. Cada salida auxiliar DEBE referenciarse desde `plan.md`; no reemplaza ninguno de los artefactos canónicos.
+
 No se permite almacenar specs funcionales dentro de .specify.
 
 La carpeta .specify se reserva para infraestructura operativa de spec-kit.
@@ -107,11 +117,13 @@ La carpeta .specify se reserva para infraestructura operativa de spec-kit.
 
 ## Método de Trabajo
 
-Cada iniciativa DEBE contener exactamente tres archivos:
+Cada iniciativa DEBE contener los tres artefactos canónicos:
 
 - spec.md
 - plan.md
 - tasks.md
+
+También puede contener únicamente las salidas auxiliares de `speckit.plan` definidas en Estructura del Repositorio. Dichas salidas DEBEN quedar referenciadas en `plan.md` y no requieren una tarea individual en `tasks.md`, porque se producen antes de la fase de tareas. Todo archivo de implementación continúa sujeto a la trazabilidad obligatoria a una tarea.
 
 Antes de implementar:
 
