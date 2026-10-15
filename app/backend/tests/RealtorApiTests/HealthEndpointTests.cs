@@ -1,7 +1,9 @@
 using System.Net;
 using System.Text.Json;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
+using RealtorApi.Features.Properties.ListProperties;
 using RealtorApi.Infrastructure.Endpoints;
 
 namespace RealtorApiTests;
@@ -12,7 +14,7 @@ public class HealthEndpointTests : IClassFixture<WebApplicationFactory<Program>>
 
     public HealthEndpointTests(WebApplicationFactory<Program> factory)
     {
-        _factory = factory;
+        _factory = factory.WithWebHostBuilder(builder => builder.UseEnvironment("Testing"));
     }
 
     [Fact]
@@ -20,7 +22,7 @@ public class HealthEndpointTests : IClassFixture<WebApplicationFactory<Program>>
     {
         using var client = _factory.CreateClient();
 
-        Assert.Single(_factory.Services.GetServices<ISlice>());
+        Assert.Contains(_factory.Services.GetServices<ISlice>(), slice => slice is ListPropertiesEndpoint);
 
         var response = await client.GetAsync("/health");
 

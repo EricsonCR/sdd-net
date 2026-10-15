@@ -1,0 +1,9 @@
+@RealtorApi_BaseUrl = http://localhost:5232
+
+GET {{RealtorApi_BaseUrl}}/api/properties
+Accept: application/json
+
+###
+
+GET {{RealtorApi_BaseUrl}}/api/properties?page=1&pageSize=6
+Accept: application/json

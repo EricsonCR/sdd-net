@@ -72,7 +72,44 @@ namespace RealtorApi.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Status");
+
                     b.ToTable("Properties", (string)null);
+                });
+
+            modelBuilder.Entity("RealtorApi.Domain.Properties.PropertyStatus", b =>
+                {
+                    b.Property<string>("Value")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Value");
+
+                    b.ToTable("property_status", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_property_status_value_not_empty", "\"Value\" <> ''");
+                        });
+                });
+
+            modelBuilder.Entity("RealtorApi.Domain.Properties.Property", b =>
+                {
+                    b.HasOne("RealtorApi.Domain.Properties.PropertyStatus", "PropertyStatus")
+                        .WithMany("Properties")
+                        .HasForeignKey("Status")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("FK_Properties_property_status_Status");
+
+                    b.Navigation("PropertyStatus");
+                });
+
+            modelBuilder.Entity("RealtorApi.Domain.Properties.PropertyStatus", b =>
+                {
+                    b.Navigation("Properties");
                 });
 #pragma warning restore 612, 618
         }

@@ -6,6 +6,8 @@ namespace RealtorApi.Infrastructure.Persistence;
 
 public static class DatabaseSeeder
 {
+    private static readonly SemaphoreSlim RuntimeAssetSyncLock = new(1, 1);
+
     public static void Seed(DbContext context)
     {
         SeedAsync(context).GetAwaiter().GetResult();
@@ -21,6 +23,28 @@ public static class DatabaseSeeder
         var manifest = await LoadManifestAsync(cancellationToken);
         await SyncRuntimeAssetsAsync(manifest, cancellationToken);
 
+        var statusSeedItems = await LoadPropertyStatusesAsync(manifest, cancellationToken);
+        var statuses = await appContext.PropertyStatuses
+            .ToDictionaryAsync(status => status.Value, StringComparer.Ordinal, cancellationToken);
+
+        foreach (var statusSeedItem in statusSeedItems)
+        {
+            if (statuses.TryGetValue(statusSeedItem.Value, out var existingStatus))
+            {
+                existingStatus.Description = statusSeedItem.Description;
+                continue;
+            }
+
+            var status = new PropertyStatus
+            {
+                Value = statusSeedItem.Value,
+                Description = statusSeedItem.Description
+            };
+
+            appContext.PropertyStatuses.Add(status);
+            statuses.Add(status.Value, status);
+        }
+
         var propertySeedItems = await LoadPropertiesAsync(manifest, cancellationToken);
 
         foreach (var seedItem in propertySeedItems)
@@ -31,9 +55,7 @@ public static class DatabaseSeeder
                 continue;
             }
 
-            var status = Enum.TryParse<PropertyStatus>(seedItem.Status, ignoreCase: true, out var parsedStatus)
-                ? parsedStatus
-                : PropertyStatus.Available;
+            var status = ResolveSeedStatus(seedItem.Status, statuses, seedItem.Id);
 
             var property = new Property
             {
@@ -42,7 +64,8 @@ public static class DatabaseSeeder
                 Description = seedItem.Description,
                 Address = seedItem.Address,
                 Price = seedItem.Price,
-                Status = status,
+                Status = status.Value,
+                PropertyStatus = status,
                 BedroomCount = seedItem.BedroomCount,
                 BathroomCount = seedItem.BathroomCount,
                 AreaSquareMeters = seedItem.AreaSquareMeters,
@@ -57,6 +80,20 @@ public static class DatabaseSeeder
         await appContext.SaveChangesAsync(cancellationToken);
     }
 
+    public static PropertyStatus ResolveSeedStatus(
+        string statusValue,
+        IReadOnlyDictionary<string, PropertyStatus> statuses,
+        Guid propertyId)
+    {
+        if (string.IsNullOrWhiteSpace(statusValue) || !statuses.TryGetValue(statusValue, out var status))
+        {
+            throw new InvalidOperationException(
+                $"Property seed '{propertyId}' references unknown status '{statusValue}'.");
+        }
+
+        return status;
+    }
+
     public static async Task SyncRuntimeAssetsAsync(CancellationToken cancellationToken = default)
     {
         var manifest = await LoadManifestAsync(cancellationToken);
@@ -65,30 +102,38 @@ public static class DatabaseSeeder
 
     private static async Task SyncRuntimeAssetsAsync(SeedManifest manifest, CancellationToken cancellationToken)
     {
-        var sourceFolder = ResolveSeedFilePath(manifest.ImageSourceFolder);
-        var runtimeFolder = ResolveRuntimeFilePath(manifest.ImageDestinationFolder);
-
-        Directory.CreateDirectory(runtimeFolder);
-
-        if (!Directory.Exists(sourceFolder))
+        await RuntimeAssetSyncLock.WaitAsync(cancellationToken);
+        try
         {
-            return;
-        }
+            var sourceFolder = ResolveSeedFilePath(manifest.ImageSourceFolder);
+            var runtimeFolder = ResolveRuntimeFilePath(manifest.ImageDestinationFolder);
 
-        foreach (var sourceFile in Directory.EnumerateFiles(sourceFolder, "*", SearchOption.AllDirectories))
-        {
-            cancellationToken.ThrowIfCancellationRequested();
+            Directory.CreateDirectory(runtimeFolder);
 
-            var relativePath = Path.GetRelativePath(sourceFolder, sourceFile);
-            var destinationFile = Path.Combine(runtimeFolder, relativePath);
-            var destinationDirectory = Path.GetDirectoryName(destinationFile);
-
-            if (!string.IsNullOrWhiteSpace(destinationDirectory))
+            if (!Directory.Exists(sourceFolder))
             {
-                Directory.CreateDirectory(destinationDirectory);
+                return;
             }
 
-            File.Copy(sourceFile, destinationFile, overwrite: true);
+            foreach (var sourceFile in Directory.EnumerateFiles(sourceFolder, "*", SearchOption.AllDirectories))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var relativePath = Path.GetRelativePath(sourceFolder, sourceFile);
+                var destinationFile = Path.Combine(runtimeFolder, relativePath);
+                var destinationDirectory = Path.GetDirectoryName(destinationFile);
+
+                if (!string.IsNullOrWhiteSpace(destinationDirectory))
+                {
+                    Directory.CreateDirectory(destinationDirectory);
+                }
+
+                File.Copy(sourceFile, destinationFile, overwrite: true);
+            }
+        }
+        finally
+        {
+            RuntimeAssetSyncLock.Release();
         }
     }
 
@@ -108,6 +153,17 @@ public static class DatabaseSeeder
 
         return JsonSerializer.Deserialize<List<SeedPropertyItem>>(text, JsonOptions())
             ?? new List<SeedPropertyItem>();
+    }
+
+    private static async Task<List<SeedPropertyStatus>> LoadPropertyStatusesAsync(
+        SeedManifest manifest,
+        CancellationToken cancellationToken)
+    {
+        var statusesPath = ResolveSeedFilePath(manifest.PropertyStatusesFile);
+        var text = await File.ReadAllTextAsync(statusesPath, cancellationToken);
+
+        return JsonSerializer.Deserialize<List<SeedPropertyStatus>>(text, JsonOptions())
+            ?? new List<SeedPropertyStatus>();
     }
 
     private static string ResolveSeedFilePath(string relativePath)
@@ -188,5 +244,11 @@ public static class DatabaseSeeder
         public string ImageUrl { get; set; } = string.Empty;
         public DateTimeOffset CreatedAt { get; set; }
         public DateTimeOffset? UpdatedAt { get; set; }
+    }
+
+    private sealed class SeedPropertyStatus
+    {
+        public string Value { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
     }
 }

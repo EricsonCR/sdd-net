@@ -11,6 +11,7 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<Property> Properties => Set<Property>();
+    public DbSet<PropertyStatus> PropertyStatuses => Set<PropertyStatus>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

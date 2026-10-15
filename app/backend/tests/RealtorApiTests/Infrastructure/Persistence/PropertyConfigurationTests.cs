@@ -7,13 +7,18 @@ namespace RealtorApiTests.Infrastructure.Persistence;
 public class PropertyConfigurationTests
 {
     [Fact]
-    public void PropertyStatus_IsStoredAsString()
+    public void PropertyStatus_IsStoredAsCatalogForeignKey()
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
 
         using var context = new AppDbContext(options);
+        var status = new PropertyStatus
+        {
+            Value = "Available",
+            Description = "Disponible"
+        };
 
         var property = new Property
         {
@@ -22,7 +27,8 @@ public class PropertyConfigurationTests
             Description = "Descripcion de prueba",
             Address = "Avenida de prueba 123",
             Price = 2500m,
-            Status = PropertyStatus.Available,
+            Status = status.Value,
+            PropertyStatus = status,
             BedroomCount = 2,
             BathroomCount = 1,
             AreaSquareMeters = 120m,
@@ -30,11 +36,12 @@ public class PropertyConfigurationTests
             CreatedAt = DateTimeOffset.UtcNow
         };
 
+        context.PropertyStatuses.Add(status);
         context.Properties.Add(property);
         context.SaveChanges();
 
         var saved = context.Properties.Single();
-        Assert.Equal(PropertyStatus.Available, saved.Status);
+        Assert.Equal("Available", saved.Status);
     }
 
     [Fact]
@@ -51,7 +58,13 @@ public class PropertyConfigurationTests
 
         Assert.NotNull(entityType);
         Assert.NotNull(statusProperty);
-        Assert.NotNull(statusProperty!.GetValueConverter());
+        Assert.Null(statusProperty!.GetValueConverter());
+        Assert.Equal(typeof(string), statusProperty.ClrType);
         Assert.Equal(nameof(Property.Id), entityType.FindPrimaryKey()!.Properties.Single().Name);
+
+        var statusForeignKey = Assert.Single(entityType.GetForeignKeys());
+        Assert.Equal(typeof(PropertyStatus), statusForeignKey.PrincipalEntityType.ClrType);
+        Assert.Equal(nameof(PropertyStatus.Value), Assert.Single(statusForeignKey.PrincipalKey.Properties).Name);
+        Assert.Equal("property_status", statusForeignKey.PrincipalEntityType.GetTableName());
     }
 }

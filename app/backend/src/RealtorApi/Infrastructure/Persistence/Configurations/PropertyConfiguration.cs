@@ -30,11 +30,15 @@ public sealed class PropertyConfiguration : IEntityTypeConfiguration<Property>
             .IsRequired();
 
         builder.Property(property => property.Status)
-            .HasConversion(
-                status => status.ToString(),
-                value => Enum.Parse<PropertyStatus>(value))
             .HasMaxLength(32)
             .IsRequired();
+
+        builder.HasOne(property => property.PropertyStatus)
+            .WithMany(status => status.Properties)
+            .HasForeignKey(property => property.Status)
+            .HasPrincipalKey(status => status.Value)
+            .OnDelete(DeleteBehavior.Restrict)
+            .HasConstraintName("FK_Properties_property_status_Status");
 
         builder.Property(property => property.BedroomCount)
             .IsRequired();
