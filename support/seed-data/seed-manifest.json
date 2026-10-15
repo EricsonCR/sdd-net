@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "sourceRoot": "support/seed-data",
+  "propertyStatusesFile": "properties-statuses.json",
+  "propertiesFile": "properties.json",
+  "imageSourceFolder": "images/properties",
+  "imageDestinationFolder": "wwwroot/images/properties",
+  "publicBasePath": "/images/properties"
+}
